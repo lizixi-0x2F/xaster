@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/lizixi-0x2F/xaster/main/.github/assets/logo.svg" alt="Xaster" width="160" />
-</p>
-
 <h1 align="center">Xaster</h1>
 <p align="center"><strong>The native AI agent inside Neovim.</strong></p>
 
