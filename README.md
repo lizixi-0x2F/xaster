@@ -1,13 +1,13 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/xaster-nvim/xaster.nvim/main/.github/assets/logo.svg" alt="Xaster" width="160" />
+  <img src="https://raw.githubusercontent.com/lizixi-0x2F/xaster/main/.github/assets/logo.svg" alt="Xaster" width="160" />
 </p>
 
 <h1 align="center">Xaster</h1>
 <p align="center"><strong>The native AI agent inside Neovim.</strong></p>
 
 <p align="center">
-  <a href="https://github.com/xaster-nvim/xaster.nvim/stargazers"><img src="https://img.shields.io/github/stars/xaster-nvim/xaster.nvim?style=for-the-badge&color=cba6f7&labelColor=1e1e2e" alt="Stars" /></a>
-  <a href="https://github.com/xaster-nvim/xaster.nvim/blob/main/LICENSE"><img src="https://img.shields.io/github/license/xaster-nvim/xaster.nvim?style=for-the-badge&color=89dceb&labelColor=1e1e2e" alt="License" /></a>
+  <a href="https://github.com/lizixi-0x2F/xaster/stargazers"><img src="https://img.shields.io/github/stars/lizixi-0x2F/xaster?style=for-the-badge&color=cba6f7&labelColor=1e1e2e" alt="Stars" /></a>
+  <a href="https://github.com/lizixi-0x2F/xaster/blob/main/LICENSE"><img src="https://img.shields.io/github/license/lizixi-0x2F/xaster?style=for-the-badge&color=89dceb&labelColor=1e1e2e" alt="License" /></a>
   <a href="https://neovim.io"><img src="https://img.shields.io/badge/Neovim-%3E%3D%200.10-57A143?style=for-the-badge&logo=neovim&labelColor=1e1e2e" alt="Neovim" /></a>
 </p>
 
@@ -66,7 +66,7 @@ Xaster is different:
 
 ```lua
 {
-  "xaster-nvim/xaster.nvim",
+  "lizixi-0x2F/xaster",
   dependencies = { "nvim-lua/plenary.nvim" },
   opts = {
     agent = {
@@ -87,7 +87,7 @@ Xaster is different:
 
 ```lua
 use {
-  "xaster-nvim/xaster.nvim",
+  "lizixi-0x2F/xaster",
   requires = { "nvim-lua/plenary.nvim" },
   config = function()
     require("xaster").setup({
@@ -350,7 +350,7 @@ export ANTHROPIC_MODEL="..."             # Model override
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, and PR workflow.
 
-- **Good first issues**: [Issues labeled `good-first-issue`](https://github.com/xaster-nvim/xaster.nvim/issues?q=is%3Aissue+is%3Aopen+label%3Agood-first-issue)
+- **Good first issues**: [Issues labeled `good-first-issue`](https://github.com/lizixi-0x2F/xaster/issues?q=is%3Aissue+is%3Aopen+label%3Agood-first-issue)
 - **Code style**: 2-space indent, `snake_case` modules, `dot.case` tool names
 - **Tests**: `bash tests/run_tests.sh` (requires Neovim >= 0.10)
 

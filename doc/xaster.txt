@@ -49,7 +49,7 @@ REQUIREMENTS ~
 LAZY.NVIM ~
 >
   {
-    "xaster-nvim/xaster.nvim",
+    "lizixi-0x2F/xaster",
     opts = {
       agent = {
         api_key = "sk-...",
@@ -65,7 +65,7 @@ LAZY.NVIM ~
 PACKER.NVIM ~
 >
   use {
-    "xaster-nvim/xaster.nvim",
+    "lizixi-0x2F/xaster",
     requires = { "nvim-lua/plenary.nvim" },
     config = function()
       require("xaster").setup({

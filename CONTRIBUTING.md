@@ -107,12 +107,12 @@ helpers.assert_eq(type(mod), "table", "module should load")
 
 ## First-time contributors
 
-Look for issues labeled [`good-first-issue`](https://github.com/xaster-nvim/xaster.nvim/issues?q=is%3Aissue+is%3Aopen+label%3Agood-first-issue). These are designed to be approachable for new contributors.
+Look for issues labeled [`good-first-issue`](https://github.com/lizixi-0x2F/xaster/issues?q=is%3Aissue+is%3Aopen+label%3Agood-first-issue). These are designed to be approachable for new contributors.
 
 ## Questions?
 
-- Open a [GitHub Discussion](https://github.com/xaster-nvim/xaster.nvim/discussions) (coming soon)
-- Ask in the issue: [Create a question issue](https://github.com/xaster-nvim/xaster.nvim/issues/new)
+- Open a [GitHub Discussion](https://github.com/lizixi-0x2F/xaster/discussions) (coming soon)
+- Ask in the issue: [Create a question issue](https://github.com/lizixi-0x2F/xaster/issues/new)
 
 ## Code of Conduct
 
