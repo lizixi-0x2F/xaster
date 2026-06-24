@@ -5,9 +5,9 @@ std = "lua51+nvim"
 
 [lints]
 unused_variable = "warn"
-undefined_variable = "error"
+undefined_variable = "deny"
 unscoped_variables = "warn"
-incorrect_standard_library_use = "error"
+incorrect_standard_library_use = "deny"
 
 [config]
 # These globals are provided by Neovim
