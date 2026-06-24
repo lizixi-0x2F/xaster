@@ -60,7 +60,9 @@ jobs:
           selene --version
 
       - name: Run selene
-        run: selene lua/
+        run: |
+          selene generate-std
+          selene lua/
 
       - name: Install stylua
         run: |
