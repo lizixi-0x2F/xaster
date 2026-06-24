@@ -37,19 +37,6 @@ Xaster is different:
 | **Snapshots + Auto-rollback** | ✅ | ❌ | ❌ | ✅ | ✅ |
 | **BYO Model** | ✅ OpenAI compat | ✅ 5 providers | ✅ 7 providers | ✅ 7 providers | ✅ 100+ |
 
-## 🎥 See it in action
-
-### The Agent Loop
-*User asks: "add proper error handling to `parse_config`" — the agent explores, plans, executes, and verifies.*
-
-### Edit Confirmation
-*Every edit batch shows a unified diff. Green = added, Red = removed. You decide what applies.*
-
-### Virtual Cursor
-*Watch the agent work. An amber `|` shows where it's editing. A purple `|` shows where it's reading. Trails fade behind it.*
-
-> *Demo GIFs coming soon — recording in progress.*
-
 ## ⚡ Quick Start
 
 ### Requirements
