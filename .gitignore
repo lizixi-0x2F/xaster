@@ -1,0 +1,23 @@
+# Lua
+*.luac
+
+# Neovim
+*.sock
+*.log
+nvim-data/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+tests/tmp/
+tests/output/
+
+# Checkpoints (local, not committed)
+checkpoints/
+
+# Secrets
+.env
+.env.local
+*.key

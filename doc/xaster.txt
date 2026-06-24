@@ -1,0 +1,533 @@
+*xaster.txt*          The native AI agent inside Neovim
+
+==============================================================================
+CONTENTS                                                      *xaster-contents*
+
+  1. Introduction ................................ |xaster-intro|
+  2. Installation ................................. |xaster-install|
+  3. Commands ..................................... |xaster-commands|
+  4. Configuration ................................ |xaster-config|
+  5. Agent Loop ................................... |xaster-agent-loop|
+  6. Tools ........................................ |xaster-tools|
+  7. Memory ....................................... |xaster-memory|
+  8. UI ........................................... |xaster-ui|
+  9. Supported Models ............................. |xaster-models|
+  10. Keymaps ..................................... |xaster-keymaps|
+  11. API ......................................... |xaster-api|
+  12. Troubleshooting .............................. |xaster-troubleshooting|
+
+==============================================================================
+1. INTRODUCTION                                              *xaster-intro*
+
+Xaster is a Neovim-native AI coding agent. Unlike simple "chat with AI in a
+sidebar" plugins, Xaster implements a full autonomous agent loop:
+
+    EXPLORE → PLAN → EXECUTE → VERIFY
+
+The agent reads your codebase, plans the work, makes edits through real Vim
+operations, shows you every diff before applying, and verifies nothing broke
+— all without leaving Neovim.
+
+Key features:
+  - True agent loop with phase-gated tool access
+  - 70+ native tools including Vim grammar (ciw, da{, :%s/)
+  - Edit confirmation with unified diff viewer
+  - Virtual cursor showing agent position in real-time
+  - Four-layer memory system (fast, slow, jump stack, snapshots)
+  - Automatic LSP diagnostic verification after edits
+  - Circuit breaker to prevent infinite loops
+  - Checkpoint recovery across Neovim sessions
+  - Bring-your-own-model: any OpenAI-compatible API
+
+==============================================================================
+2. INSTALLATION                                            *xaster-install*
+
+REQUIREMENTS ~
+  - Neovim >= 0.10
+  - `curl` executable (for API calls)
+
+LAZY.NVIM ~
+>
+  {
+    "xaster-nvim/xaster.nvim",
+    opts = {
+      agent = {
+        api_key = "sk-...",
+        model = "gpt-4o",
+      },
+    },
+    keys = {
+      { "<leader>ac", "<cmd>XasterChat<cr>", desc = "Xaster Chat" },
+    },
+  }
+<
+
+PACKER.NVIM ~
+>
+  use {
+    "xaster-nvim/xaster.nvim",
+    requires = { "nvim-lua/plenary.nvim" },
+    config = function()
+      require("xaster").setup({
+        agent = { api_key = "sk-...", model = "gpt-4o" },
+      })
+    end,
+  }
+<
+
+ENVIRONMENT VARIABLES ~
+  ANTHROPIC_API_KEY       API key for Anthropic/OpenAI-compatible endpoints
+  ANTHROPIC_BASE_URL      Custom API endpoint URL
+  ANTHROPIC_MODEL         Model name override
+
+==============================================================================
+3. COMMANDS                                                *xaster-commands*
+
+:XasterChat                                    *:XasterChat*
+    Toggle the Xaster agent chat panel.
+
+:XasterChatOpen                                *:XasterChatOpen*
+    Open the chat panel.
+
+:XasterChatClose                               *:XasterChatClose*
+    Close the chat panel.
+
+:XasterAgentStop                               *:XasterAgentStop*
+    Stop the currently running agent request.
+
+:XasterAgentClear                              *:XasterAgentClear*
+    Clear the agent conversation history.
+
+:XasterUltracode [on|off]                      *:XasterUltracode*
+    Toggle or set ultracode exhaustive mode.
+    Without argument: toggle.
+    "on"/"1": enable exhaustive mode.
+    "off"/"0": normal mode.
+
+:XasterPhase [explore|plan|execute|verify]     *:XasterPhase*
+    Show current phase or set the agent phase.
+
+:XasterStatus                                  *:XasterStatus*
+    Show comprehensive agent status: model, phase, round, tokens, log info.
+
+:XasterObserve                                 *:XasterObserve*
+    Take a full editor state snapshot and show as JSON buffer.
+
+:XasterHistory [N]                             *:XasterHistory*
+    Show Xaster operation history (last N entries, default 30).
+
+:XasterHistoryClear                            *:XasterHistoryClear*
+    Clear all operation history entries.
+
+:XasterLog [N]                                 *:XasterLog*
+    Show Xaster internal log (last N entries, default 50).
+
+:XasterTools                                   *:XasterTools*
+    List all 70+ available agent tools with descriptions.
+
+:XasterLock                                    *:XasterLock*
+    Lock the editor: agent has exclusive edit access.
+
+:XasterUnlock                                  *:XasterUnlock*
+    Unlock the editor: restore normal user edit access.
+
+:XasterSync [off]                              *:XasterSync*
+    Toggle file sync. Without argument: enable. "off": disable.
+
+:XasterCheckpoints                             *:XasterCheckpoints*
+    List available checkpoint saves.
+
+:XasterRestoreLast                             *:XasterRestoreLast*
+    Restore the most recent agent checkpoint.
+
+:XasterCheckpointClear                         *:XasterCheckpointClear*
+    Delete all saved checkpoints.
+
+:XasterToast [message]                         *:XasterToast*
+    Show a test toast notification.
+
+==============================================================================
+4. CONFIGURATION                                           *xaster-config*
+
+Full defaults:
+>
+  require("xaster").setup({
+    agent = {
+      api_key = "",
+      model = "gpt-4o",
+      max_tokens = 8192,
+      api_url = "https://api.openai.com/v1/chat/completions",
+      max_rounds = 1024,
+      timeout_sec = 300,
+      max_retries = 3,
+      retry_delays = { 1, 4, 15 },
+      ultracode = true,
+    },
+    chat = {
+      height_ratio = 0.35,
+      min_chat_height = 8,
+      cmd_height = 8,
+      max_messages = 500,
+    },
+    ui = {
+      action = { enabled = true },
+      toast = { enabled = true },
+      statusline = { enabled = true },
+      highlights = { enabled = true },
+    },
+    vcursor = {
+      mode = "line",
+      auto_hide_ms = 0,
+      flash_duration_ms = 400,
+      show_label = false,
+    },
+    history = { max_entries = 1000 },
+    lock = {
+      auto_lock_new_buffers = true,
+      block_insert = true,
+    },
+    file_sync = {
+      enabled = true,
+      check_interval_ms = 2000,
+      auto_reload = true,
+    },
+    log = {
+      level = "INFO",
+      ring_size = 2000,
+      file_enabled = false,
+      notify_enabled = true,
+    },
+    checkpoint = {
+      max_checkpoints = 5,
+      auto_save_on_exit = true,
+    },
+    keymaps = {
+      chat_toggle = "<leader>ac",
+      agent_stop = "<leader>as",
+      observe = "<leader>xo",
+      history = "<leader>xh",
+      action = "<leader>xa",
+    },
+  })
+<
+
+agent.api_key                                *xaster-config-agent-api_key*
+    API key for the LLM provider. Required if no env var is set.
+
+agent.model                                  *xaster-config-agent-model*
+    Model name. Supports any OpenAI-compatible model.
+    Examples: "gpt-4o", "deepseek-chat", "claude-sonnet-4-20250514".
+
+agent.api_url                                *xaster-config-agent-api_url*
+    API endpoint URL. Must be OpenAI-compatible (/v1/chat/completions).
+
+agent.max_rounds                             *xaster-config-agent-max_rounds*
+    Maximum agent loop iterations before forced stop (default: 1024).
+
+agent.ultracode                              *xaster-config-agent-ultracode*
+    Boolean. When true, agent uses exhaustive mode with deeper analysis,
+    more thorough execution, and adversarial self-review.
+
+==============================================================================
+5. AGENT LOOP                                           *xaster-agent-loop*
+
+Xaster follows a structured four-phase engineering cycle:
+
+  EXPLORE → PLAN → EXECUTE → VERIFY
+
+PHASE DETAILS ~
+
+EXPLORE ~
+  - Read-only phase. No edits allowed.
+  - Agent reads files, runs LSP queries, browses symbols.
+  - Goal: understand the codebase and problem space.
+
+PLAN ~
+  - Read + memory write tools. Still no edits.
+  - Agent creates tasks with dependencies, designs approach.
+  - Auto-advances from EXPLORE when tasks are created.
+
+EXECUTE ~
+  - Full tool access. All 70+ tools available.
+  - Agent makes changes via Vim-native operations.
+  - Every edit is diffed and shown for confirmation.
+
+VERIFY ~
+  - Full tool access with verification-focused prompt.
+  - Runs LSP diagnostics, checks for regressions.
+  - Auto-advances from EXECUTE after edits are made.
+
+AUTO-ADVANCEMENT ~
+  - EXPLORE → PLAN: when memory_tasks_init is called
+  - EXECUTE → VERIFY: when any edit tool is executed
+  - VERIFY → EXPLORE: when verification passes, if tasks remain
+
+CONFIRMATION ~
+  Before edits are applied, a unified diff is shown in a floating window.
+  Press:
+    y       Accept edits, continue agent loop
+    n / q   Reject edits, restore pre-edit snapshot
+    <C-c>   Abort, restore snapshot and stop agent
+
+==============================================================================
+6. TOOLS                                                    *xaster-tools*
+
+Xaster provides 70+ native tools. See |:XasterTools| to list them all.
+
+TOOL CATEGORIES ~
+
+Buffer tools ~
+  buffer.list, buffer.get, buffer.set, buffer.edit, buffer.create,
+  buffer.delete, buffer.save, buffer.reload, buffer.info
+
+Vim Grammar tools ~
+  vim.edit(operator, motion, text)    ciw, da{, >ap, yiw, guw, etc.
+  vim.search(pattern, direction)      Search with :vimgrep
+  vim.substitute(range, pat, repl)    Native :s with full regex
+  vim.normal(keys)                    Raw normal mode commands
+
+Window tools ~
+  window.list, window.focus, window.split, window.close, window.config
+
+Cursor tools ~
+  cursor.get, cursor.set, window.scroll
+
+Editor tools ~
+  mode.get, command, feedkeys, eval, lua, visual.get
+
+LSP tools ~
+  lsp.hover, lsp.definition, lsp.references, lsp.diagnostics,
+  lsp.code_actions, lsp.document_symbols, lsp.workspace_symbols
+
+Register tools (with Lua stack) ~
+  register.get, register.get_type, register.set, register.list,
+  register.push, register.pop, register.peek, register.rotate,
+  register.eval, register.set_expression, register.jump_to
+
+Mark tools ~
+  mark.get, mark.set
+
+Memory tools ~
+  memory.remember, memory.recall, memory.forget, memory.clear
+  memory.learn, memory.know, memory.query, memory.guide
+  memory.tasks_init, memory.task_update, memory.task_progress
+  memory.mark, memory.jump, memory.locations
+  memory.jump_push, memory.jump_back, memory.jump_forward
+  memory.snapshot_create, memory.snapshot_restore, memory.snapshot_diff
+
+File tools ~
+  file.read, file.write, file.ensure_open, file.watch
+
+Shell ~
+  bash(cmd, cwd, timeout_ms)
+
+SAFETY-TOOLS ~
+  undo.savepoint, undo, redo, undo.tree
+  lock.get, lock.set
+  highlight.add, highlight.del, highlight.clear, virtual_text.show
+  vcursor.set, vcursor.get, vcursor.clear, vcursor.flash
+  state.observe, agent.observe, log.dump, log.observe
+
+PHASE GATING ~
+  In EXPLORE and PLAN phases, destructive tools (buffer edit, file write,
+  command execution, etc.) are blocked. The agent can only observe.
+
+  See |xaster-agent-loop| for more on phase gating.
+
+==============================================================================
+7. MEMORY                                                *xaster-memory*
+
+Xaster has a four-layer memory system:
+
+FAST MEMORY (TTL-based scratchpad) ~
+  For temporary storage during a single task. Keys have optional TTL.
+  memory.remember(key, value, ttl_seconds)
+  memory.recall(key)           -- returns value or nil
+  memory.forget(key)
+
+SLOW MEMORY (persistent, confidence-scored) ~
+  For knowledge that should survive context compression. Each entry has
+  a confidence score (0.0-1.0) that increases with repeated confirmation.
+  memory.learn(type, key, value, tags, confidence)
+  memory.know(key)             -- direct lookup
+  memory.query(key, type, min_confidence)  -- fuzzy search
+  memory.guide()               -- most relevant high-confidence entries
+
+JUMP STACK (semantic navigation) ~
+  Structured forward/back navigation with intent labels:
+  memory.jump_push() / memory.jump_back() / memory.jump_forward()
+  Automatically pushes current position when jumping.
+
+SNAPSHOTS (full editor state) ~
+  Captures buffer content, cursor, all named registers, and all named marks.
+  memory.snapshot_create(name)    -- full rollback point
+  memory.snapshot_restore(name)   -- restore editor state
+  memory.snapshot_diff(name)      -- diff against snapshot
+
+TASK TRACKING ~
+  Tasks with dependency DAG support:
+  memory.tasks_init(tasks)
+  memory.task_update(id, status)
+  memory.task_progress()          -- returns blocked / in-progress / done
+
+==============================================================================
+8. UI                                                        *xaster-ui*
+
+CHAT PANEL ~
+  Opens as right-side floating window with three vertical sections:
+    - Chat buffer (top)    — Markdown with Treesitter highlighting
+    - Command buffer (mid) — Tool execution status (PENDING / OK / ERROR)
+    - Input buffer (bot)   — User input line
+
+DIFF CONFIRMATION ~
+  Floating window showing unified diff with:
+    - Green + lines (additions)
+    - Red - lines (deletions)
+    - Blue hunk headers (@@ -old +new @@)
+    - File-by-file summary
+
+VIRTUAL CURSOR ~
+  Agent position indicator:
+    - Amber |  = editing
+    - Purple | = reading
+    - Fading trails show where the agent has been
+
+HIGHLIGHT GROUPS ~
+  XasterAgent      - Agent messages (Mauve)
+  XasterThink      - Reasoning text (Gray italic)
+  XasterUser       - User messages (Green)
+  XasterTool       - Tool call names (Amber)
+  XasterToolSuccess - Successful tool results (Green)
+  XasterToolPending - In-progress tool calls (Yellow)
+  XasterError      - Error messages (Red)
+  XasterDiffAdd    - Added lines (Green background)
+  XasterDiffDel    - Removed lines (Red background)
+  XasterDiffHunk   - Hunk headers (Blue)
+  XasterCodeBlock  - Inline code in chat
+  XasterInlineButton - Action buttons
+
+STATUSLINE ~
+  Use `require("xaster").statusline()` in your statusline config to show
+  agent phase, round count, and token usage.
+
+==============================================================================
+9. SUPPORTED MODELS                                       *xaster-models*
+
+Any provider with an OpenAI-compatible chat completions endpoint:
+
+  Provider    Model example          Notes
+  ─────────   ────────────────────   ─────────────────────────────
+  OpenAI      gpt-4o, gpt-4-turbo   Native tool calling
+  Anthropic   claude-sonnet-4-...    Via compatible endpoint
+  DeepSeek    deepseek-chat          Full support, reasoning_content
+  Groq        llama-3.3-70b          Fast inference
+  Ollama      qwen2.5-coder:14b      Local, private
+  OpenRouter  (any model)            Unified API gateway
+
+DeepSeek-specific handling:
+  - Tool list is intersected with essential tools to avoid "request too
+    large" API errors
+  - reasoning_content is streamed and displayed as XasterThink (gray italic)
+  - All schemas use additionalProperties: false (strict mode)
+
+==============================================================================
+10. KEYMAPS                                               *xaster-keymaps*
+
+Default keymaps:
+  <leader>ac     :XasterChat              Toggle chat panel
+  <leader>as     :XasterAgentStop         Stop running agent
+  <leader>xo     :XasterObserve           Editor state snapshot
+  <leader>xh     :XasterHistory           Operation history
+  <leader>xa     Toggle action indicator  Agent status indicator
+
+Chat panel keymaps:
+  Input buffer:   <CR> submit, <Esc> stop-insert, <C-k> focus chat
+  Chat buffer:    i focus input, <C-c> stop agent
+  Command buffer: i focus input, <C-k> focus chat, <C-c> stop agent
+
+Diff confirmation keymaps:
+  y     Accept edits, continue loop
+  n / q Reject edits, restore pre-edit snapshot
+  <C-c> Abort, restore snapshot and stop agent
+
+All keymaps are configurable via the `keymaps` option in setup().
+
+==============================================================================
+11. API                                                     *xaster-api*
+
+Lua API:
+>
+  require("xaster").setup(opts)       -- Initialize plugin
+  require("xaster").chat_toggle()     -- Toggle chat panel
+  require("xaster").chat_open()       -- Open chat panel
+  require("xaster").chat_close()      -- Close chat panel
+  require("xaster").send_message(msg) -- Send message to agent
+  require("xaster").stop()            -- Stop running agent
+  require("xaster").observe()         -- Full state snapshot
+  require("xaster").get_tools()       -- List all tools
+  require("xaster").toast(msg, level) -- Show toast notification
+  require("xaster").statusline()      -- Statusline component string
+  require("xaster").eval(code)        -- Evaluate Lua code safely
+<
+
+Module-level API:
+>
+  require("xaster.agent").send_message(text)
+  require("xaster.agent").stop()
+  require("xaster.agent").observe()     -- returns { running, phase, round, ... }
+  require("xaster.agent").get_phase()
+  require("xaster.agent").set_phase(phase)
+
+  require("xaster.llm").configure(opts)
+  require("xaster.llm").is_configured()
+  require("xaster.llm").get_provider()
+  require("xaster.llm").get_model()
+  require("xaster.llm").estimate_tokens(messages)
+
+  require("xaster.editor").observe()    -- full editor snapshot
+  require("xaster.editor").compute_unified_diff(before, after)
+  require("xaster.editor").create_buffer(opts)
+
+  require("xaster.log").dump({ n = 50 })
+  require("xaster.log").observe()
+  require("xaster.log").for_module(name)
+<
+
+==============================================================================
+12. TROUBLESHOOTING                                *xaster-troubleshooting*
+
+API KEY NOT CONFIGURED ~
+  Xaster checks for API key in this order:
+    1. config.agent.api_key in setup()
+    2. Environment variable ANTHROPIC_API_KEY
+    3. Environment variable ANTHROPIC_AUTH_TOKEN
+  Use :XasterStatus to verify the agent is configured.
+
+"CURL NOT FOUND" WARNING ~
+  Xaster uses curl for API requests. Install curl:
+    macOS:  (built-in)
+    Ubuntu: sudo apt-get install curl
+
+NEOVIM VERSION WARNING ~
+  Xaster requires Neovim >= 0.10 for vim.system() support.
+  Check: nvim --version
+
+DEEPSEEK "REQUEST TOO LARGE" ~
+  Xaster automatically filters tools to a minimal set for DeepSeek models.
+  If you still encounter this, try reducing agent.max_rounds or clearing
+  conversation history with :XasterAgentClear.
+
+AGENT NOT RESPONDING ~
+  1. Check :XasterStatus — is running=yes?
+  2. Check :XasterLog 50 — look for ERROR entries
+  3. Try :XasterAgentStop then :XasterAgentClear and restart
+  4. Check your API credit/rate limits
+
+RESTORE FROM CRASH ~
+  If Neovim crashed mid-session:
+    1. Reopen Neovim — Xaster shows checkpoint notification
+    2. Run :XasterCheckpoints to see available saves
+    3. Run :XasterRestoreLast to restore the latest checkpoint
+
+==============================================================================
+ vim:tw=78:ts=8:ft=help:norl:
