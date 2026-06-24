@@ -11,9 +11,10 @@
   <a href="https://neovim.io"><img src="https://img.shields.io/badge/Neovim-%3E%3D%200.10-57A143?style=for-the-badge&logo=neovim&labelColor=1e1e2e" alt="Neovim" /></a>
 </p>
 
-<p align="center">
+<!-- Demo GIF coming soon -->
+<!-- <p align="center">
   <img src=".github/assets/demo.gif" alt="Xaster demo" width="720" />
-</p>
+</p> -->
 
 ---
 
@@ -196,9 +197,10 @@ Xaster has a four-layer memory system — it remembers across turns and across s
 
 Everything is styled with **Catppuccin Mocha** by default:
 
-<p align="center">
+<!-- Chat UI screenshot coming soon -->
+<!-- <p align="center">
   <img src=".github/assets/chat-ui.png" alt="Chat UI" width="720" />
-</p>
+</p> -->
 
 - **Streaming chat** — Real-time streamed responses with syntax highlighting
 - **Thinking display** — Model reasoning shown in gray italic (DeepSeek `reasoning_content` supported)
