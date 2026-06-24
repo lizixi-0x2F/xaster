@@ -1,4 +1,3 @@
-[selene]
 # Selene Lua linter configuration for Xaster
 # https://kampfkarren.github.io/selene/
 
@@ -12,17 +11,8 @@ incorrect_standard_library_use = "error"
 
 [config]
 # These globals are provided by Neovim
-[vim]
-any = "allow"
-
-[describe]
-any = "allow"
-
-[it]
-any = "allow"
-
-[pcall_ok]
-any = "allow"
-
-[assert_eq]
-any = "allow"
+vim = "allow"
+describe = "allow"
+it = "allow"
+pcall_ok = "allow"
+assert_eq = "allow"
