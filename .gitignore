@@ -17,6 +17,9 @@ tests/output/
 # Checkpoints (local, not committed)
 checkpoints/
 
+# Claude
+.claude/
+
 # Secrets
 .env
 .env.local
